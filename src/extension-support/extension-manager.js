@@ -19,6 +19,7 @@ const Scratch3Ev3Blocks = require('../extensions/scratch3_ev3');
 const Scratch3MakeyMakeyBlocks = require('../extensions/scratch3_makeymakey');
 const Scratch3BirdbrainFinchBlocks = require('../extensions/scratch3_finch');
 const Scratch3BirdbrainHummingbirdBlocks = require('../extensions/scratch3_hummingbird');
+const Scratch3BirdbrainHummingbirdBitBlocks = require('../extensions/scratch3_hummingbird_bit');
 
 const builtinExtensions = {
     pen: Scratch3PenBlocks,
@@ -30,9 +31,10 @@ const builtinExtensions = {
     videoSensing: Scratch3VideoSensingBlocks,
     speech2text: Scratch3Speech2TextBlocks,
     ev3: Scratch3Ev3Blocks,
-    makeymakey: Scratch3MakeyMakeyBlocks
+    makeymakey: Scratch3MakeyMakeyBlocks,
     birdbrainFinch: Scratch3BirdbrainFinchBlocks,
-    birdbrainHummingbird: Scratch3BirdbrainHummingbirdBlocks
+    birdbrainHummingbird: Scratch3BirdbrainHummingbirdBlocks,
+    birdbrainHummingbirdBit: Scratch3BirdbrainHummingbirdBitBlocks
 };
 
 /**
