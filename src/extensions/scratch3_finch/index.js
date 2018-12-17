@@ -197,6 +197,20 @@ class Scratch3FinchBlocks {
         return this.setFinchMotor({LEFT: 0, RIGHT: 0});
     }
 
+    /**
+     * @param {object} args args passed in by the scratch block
+     * @param {string} args.COLOR The color to set to as a number in 0xRRGGBB format
+     */
+    setTriLEDPicker (args) {
+        const color = parseInt(args.COLOR.substr(1), 16);
+
+        this.setLED({
+            RED: (color >> 16) & 0xFF,
+            GREEN: (color >> 8) & 0xFF,
+            BLUE: (color >> 0) & 0xFF
+        });
+    }
+
     // calculates the orientation of the finch
     getOrientation () {
 
@@ -253,7 +267,7 @@ class Scratch3FinchBlocks {
      */
     constructor (runtime) {
 
-        runtime.on(Runtime.PROJECT_STOP_ALL, this.stop);
+        runtime.on(Runtime.PROJECT_STOP_ALL, () => this.stop());
 
         this.setFinchMotor = this.setOutput(
             args => [args.LEFT, args.RIGHT],
@@ -353,6 +367,16 @@ class Scratch3FinchBlocks {
                         BLUE: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setTriLEDPicker',
+                    text: `LED [COLOR]`,
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        COLOR: {
+                            type: ArgumentType.COLOR
                         }
                     }
                 },

@@ -76,6 +76,16 @@ const Axes = {
  * @readonly
  * @enum {string}
  */
+const DeviceIds = {
+    A: 'A',
+    B: 'B',
+    C: 'C'
+};
+
+/**
+ * @readonly
+ * @enum {string}
+ */
 const MicrobitButtons = {
     A: 'A',
     B: 'B'
@@ -187,7 +197,7 @@ class Scratch3FinchBlocks {
     get HUMMINGBIRD_SENSORS_MENU () {
         return enumToMenu(HummingbirdSensors);
     }
-    
+
     get MICROBIT_AXIS_SENSORS_MENU () {
         return enumToMenu(MicrobitAxisSensors);
     }
@@ -203,6 +213,28 @@ class Scratch3FinchBlocks {
     get MICROBIT_ACCELEROMETER_STATES_MENU () {
         return enumToMenu(MicrobitAccelerometerStates);
     }
+    
+    get DEVICE_IDS_MENU () {
+        return enumToMenu(DeviceIds);
+    }
+
+    getSensor (URI) {
+        if (typeof this._sensorCache[URI] !== 'undefined') {
+            return this._sensorCache[URI];
+        }
+
+        return fetch(URI)
+            .then(rejectDisconnected)
+            .catch(serverConnectionError)
+            .then(JSON.parse)
+            .then(value => {
+                this._sensorCache[URI] = value;
+                setTimeout(() => {
+                    delete this._sensorCache[URI];
+                }, 200);
+                return value;
+            });
+    }
 
     /**
      * @param {object} args Arguments passed by the scratch block
@@ -216,40 +248,22 @@ class Scratch3FinchBlocks {
         const sensorType = args.SENSOR === HummingbirdSensors.DISTANCE ? 'distance' : args.SENSOR.toLowerCase();
         const port = args.PORT;
 
-        /**
-         * @type {Object}
-         */
-        const cache = this._sensorCache[sensorType] = this._sensorCache[sensorType] || {};
-
-        if (typeof cache[port] !== 'undefined') {
-            return cache[port];
-        }
-        return fetch(`${serverURL}/hummingbird/in/${encodeURIComponent(sensorType)}` +
-                `/${port}/${encodeURIComponent(device)}`)
-            .then(rejectDisconnected)
-            .catch(serverConnectionError)
-            .then(JSON.parse)
-            .then(value => {
-                cache[port] = value;
-                setTimeout(() => {
-                    delete cache[port];
-                }, 100);
-                return value;
-            });
+        return this.getSensor(`${serverURL}/hummingbird/in/${encodeURIComponent(sensorType)}` +
+        `/${port}/${encodeURIComponent(device)}`);
     }
 
     /**
-     * @param {function(object)} argParsing Function to turn the args object from the scratch block call into a
+     * @param {function(object): any} argParsing Function to turn the args object from the scratch block call into a
      * sensible format to cache
-     * @param {function(number, any): string} urlFunction Function to take the device, port, and values and turn them
-     * into a URL
+     * @param {function(string, (number|undefined), any): string} urlFunction Function to take the device, port, and
+     * values and turn them into a URL
      * @returns {function(object): void} A function to set some output on the Hummingbird bit.
      */
     setOutput (argParsing, urlFunction) {
         const waitingValue = {};
         const inTransit = {};
         const sendMessage = (device, port, value) => {
-            fetch(`${urlFunction(port, value)}/${device}`).then(rejectDisconnected)
+            fetch(`${urlFunction(device, port, value)}`).then(rejectDisconnected)
                 .catch(serverConnectionError)
                 .catch(error => Promise.resolve(error))
                 .then(() => {
@@ -290,12 +304,12 @@ class Scratch3FinchBlocks {
 
     /**
      * @param {object} args args passed in by the scratch block
-     * @param {string=} args.DEVICE Which device to send the commnad to
+     * @param {string} [args.DEVICE='A'] Which device to send the command to
      * @param {number} args.PORT Which LED port to set
-     * @param {number} args.COLOR The color to set to as a number in 0xRRGGBB format
+     * @param {string} args.COLOR The color to set to as a number in 0xRRGGBB format
      */
     setTriLEDPicker (args) {
-        const color = args.COLOR;
+        const color = parseInt(args.COLOR.substr(1), 16);
 
         this.setTriLED({
             DEVICE: args.DEVICE,
@@ -307,37 +321,117 @@ class Scratch3FinchBlocks {
     }
 
     /**
+     * @param {object} args args passed in by the scratch block
+     * @param {string} [args.DEVICE='A'] Which device to send the text to
+     * @param {string} args.TEXT Text to display on the Micro:bit
+     */
+    displayText (args) {
+        const device = args.DEVICE || 'A';
+        const message = args.TEXT;
+
+        fetch(`${serverURL}/hummingbird/out/print/${encodeURIComponent(message)}/${encodeURIComponent(device)}`)
+            .then(rejectDisconnected)
+            .catch(serverConnectionError);
+    }
+
+    /**
+     * @param {object} args args passed in by the scratch block
+     * @param {string} [args.DEVICE='A'] Which micro:bit to have play the note
+     * @param {number} args.NOTE What note to play on the micro:bit, where 60 is middle C and each halfstep down or up
+     * is one less or one more
+     * @param {number} args.BEATS How many beats to play a note for
+     */
+    playNote (args) {
+        const tempo = 60;
+        const note = args.NOTE;
+        const beats = args.BEATS;
+        const device = args.DEVICE || 'A';
+
+        const ms = Math.round(60000 / tempo * beats);
+
+        fetch(`${serverURL}/hummingbird/out/playnote/${note}/${ms}/${device}`).then(rejectDisconnected)
+            .catch(serverConnectionError);
+    }
+
+    getBitAxisSensor (args) {
+        const device = args.DEVICE || 'A';
+        const sensor = args.SENSOR;
+        const axis = args.AXIS;
+
+        const URIs = {};
+        URIs[MicrobitAxisSensors.ACCELEROMETER] = 'Accelerometer m/s²';
+        URIs[MicrobitAxisSensors.MAGNETOMETER] = 'Magnetometer µT';
+
+        return this.getSensor(`${serverURL}/hummingbird/in/${URIs[sensor]}/${axis}/${device}`);
+    }
+
+    getButton (args) {
+        const device = args.DEVICE || 'A';
+        const button = args.BUTTON;
+
+        return this.getSensor(`${serverURL}/hummingbird/in/button/` +
+            `${encodeURIComponent(button)}/${encodeURIComponent(device)}`);
+    }
+
+    getMicrobitTilted (args) {
+        const device = args.DEVICE || 'A';
+        const angle = args.ORIENTATION;
+
+        return this.getSensor(`${serverURL}/hummingbird/in/orientation/` +
+            `${encodeURIComponent(angle)}/${encodeURIComponent(device)}`);
+    }
+
+    getCompass (args) {
+        const device = args.DEVICE || 'A';
+
+        return this.getSensor(`${serverURL}/hummingbird/in/Compass/${encodeURIComponent(device)}`);
+    }
+
+    /**
      * Construct a set of Finch blocks.
      */
     constructor () {
         this.setLED = this.setOutput(
             args => args.INTENSITY,
-            (port, intensity) => `${serverURL}/hummingbird/out/led/` +
-                `${port}/${encodeURIComponent(intensity)}`
+            (device, port, intensity) => `${serverURL}/hummingbird/out/led/` +
+                `${port}/${encodeURIComponent(intensity)}/${encodeURIComponent(device)}`
         );
 
         this.setTriLED = this.setOutput(
             args => [args.RED, args.GREEN, args.BLUE],
-            (port, values) => `${serverURL}/hummingbird/out/triled/${port}/` +
-                `${encodeURIComponent(values[0])}/${encodeURIComponent(values[1])}/${encodeURIComponent(values[2])}`
+            (device, port, values) => `${serverURL}/hummingbird/out/triled/${port}/` +
+                `${encodeURIComponent(values[0])}/${encodeURIComponent(values[1])}/` +
+                `${encodeURIComponent(values[2])}/${encodeURIComponent(device)}`
         );
 
-        this.setServo = this.setOutput(
+        this.setServoPosition = this.setOutput(
             args => args.ANGLE,
-            (port, angle) => `${serverURL}/hummingbird/out/servo/` +
-                `${port}/${encodeURIComponent(angle)}`
+            (device, port, angle) => `${serverURL}/hummingbird/out/servo/` +
+                `${port}/${encodeURIComponent(angle)}/${encodeURIComponent(device)}`
         );
 
-        this.setMotor = this.setOutput(
+        this.setServoRotation = this.setOutput(
             args => args.SPEED,
-            (port, speed) => `${serverURL}/hummingbird/out/motor/` +
-                `${port}/${encodeURIComponent(speed)}`
+            (device, port, speed) => `${serverURL}/hummingbird/out/rotation/` +
+                `${port}/${encodeURIComponent(speed)}/${encodeURIComponent(device)}`
         );
 
         this.setVibration = this.setOutput(
             args => args.INTENSITY,
-            (port, intensity) => `${serverURL}/hummingbird/out/vibration/` +
-                `${port}/${encodeURIComponent(intensity)}`
+            (device, port, intensity) => `${serverURL}/hummingbird/out/vibration/` +
+                `${port}/${encodeURIComponent(intensity)}/${encodeURIComponent(device)}`
+        );
+
+        this.displaySymbol = this.setOutput(
+            args => args.MATRIX,
+            (device, _port, pixels) => {
+                let URI = `${serverURL}/hummingbird/out/symbol/${encodeURIComponent(device)}`;
+                pixels.split('').forEach(character => {
+                    URI += `/${character === '1'}`;
+                });
+
+                return URI;
+            }
         );
 
         /**
@@ -351,6 +445,7 @@ class Scratch3FinchBlocks {
      * @returns {object} metadata for this extension and its blocks.
      */
     getInfo () {
+        const device = [' [DEVICE]', ''][Math.floor(Math.random() * 2)];
         return {
             id: Scratch3FinchBlocks.EXTENSION_ID,
             name: Scratch3FinchBlocks.EXTENSION_NAME,
@@ -358,7 +453,7 @@ class Scratch3FinchBlocks {
             blocks: [
                 {
                     opcode: 'setLED',
-                    text: 'LED [PORT] [INTENSITY]%',
+                    text: `LED${device} [PORT] [INTENSITY]%`,
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PORT: {
@@ -369,12 +464,17 @@ class Scratch3FinchBlocks {
                         INTENSITY: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 100
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 {
                     opcode: 'setTriLED',
-                    text: 'TriLED [PORT] [RED]% [GREEN]% [BLUE]%',
+                    text: `TriLED${device} [PORT] [RED]% [GREEN]% [BLUE]%`,
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PORT: {
@@ -393,12 +493,17 @@ class Scratch3FinchBlocks {
                         BLUE: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 {
                     opcode: 'setTriLEDPicker',
-                    text: 'TriLED [PORT] [COLOR]',
+                    text: `TriLED${device} [PORT] [COLOR]`,
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PORT: {
@@ -408,6 +513,11 @@ class Scratch3FinchBlocks {
                         },
                         COLOR: {
                             type: ArgumentType.COLOR
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
@@ -422,7 +532,12 @@ class Scratch3FinchBlocks {
                     arguments: {
                         MATRIX: {
                             type: ArgumentType.MATRIX,
-                            defaultValue: '1010010101111001010110101'
+                            defaultValue: '1010110100111011010110101'
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
@@ -447,13 +562,18 @@ class Scratch3FinchBlocks {
                                 substitute non-accented characters or leave it as "Hello!".
                                 Check the micro:bit site documentation for details`
                             })
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 '---',
                 {
                     opcode: 'setServoPosition',
-                    text: 'Position Servo [PORT] [ANGLE]°',
+                    text: `Position Servo${device} [PORT] [ANGLE]°`,
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PORT: {
@@ -464,12 +584,17 @@ class Scratch3FinchBlocks {
                         ANGLE: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 {
                     opcode: 'setServoRotation',
-                    text: 'Rotation Servo [PORT] [SPEED]%',
+                    text: `Rotation Servo${device} [PORT] [SPEED]%`,
                     blockType: BlockType.COMMAND,
                     arguments: {
                         PORT: {
@@ -480,21 +605,39 @@ class Scratch3FinchBlocks {
                         SPEED: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 '---',
                 {
                     opcode: 'playNote',
-                    text: 'Play Note [NOTE] for [BEATS] beats',
+                    text: `Play${device} Note [NOTE] for [BEATS] beats`,
                     blockType: BlockType.COMMAND,
                     arguments: {
+                        NOTE: {
+                            type: ArgumentType.NOTE,
+                            defaultValue: 60
+                        },
+                        BEATS: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
+                        }
                     }
                 },
                 '---',
                 {
                     opcode: 'getHummingbirdSensor',
-                    text: '[SENSOR] [PORT]',
+                    text: `${`${device} `.trimLeft()}[SENSOR] [PORT]`,
                     blockType: BlockType.REPORTER,
                     arguments: {
                         SENSOR: {
@@ -506,35 +649,78 @@ class Scratch3FinchBlocks {
                             type: ArgumentType.NUMBER,
                             defaultValue: 1,
                             menu: 'fourPorts'
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 {
                     opcode: 'getBitAxisSensor',
-                    text: '[SENSOR] [AXIS]',
+                    text: `${`${device} `.trimLeft()}[SENSOR] [AXIS]`,
                     blockType: BlockType.REPORTER,
                     arguments: {
                         SENSOR: {
                             type: ArgumentType.STRING,
-                            defaultValue: HummingbirdSensors.LIGHT,
-                            menu: 'hummingbirdSensors'
+                            defaultValue: MicrobitAxisSensors.ACCELEROMETER,
+                            menu: 'microbitAxisSensors'
                         },
                         AXIS: {
                             type: ArgumentType.STRING,
                             defaultValue: 'X',
                             menu: 'axes'
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 },
                 {
                     opcode: 'getButton',
-                    text: 'Button [BUTTON]',
+                    text: `Button${device} [BUTTON]`,
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         BUTTON: {
                             type: ArgumentType.STRING,
                             defaultValue: MicrobitButtons.A,
-                            menu: 'microbitAxisSensors'
+                            menu: 'microbitButtons'
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getMicrobitTilted',
+                    text: `${`${device} `.trimLeft()}[ORIENTATION]`,
+                    arguments: {
+                        ORIENTATION: {
+                            type: ArgumentType.STRING,
+                            defaultValue: MicrobitAccelerometerStates.SCREEN_UP,
+                            menu: 'microbitAccelerometerStates'
+                        },
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
+                        }
+                    }
+                },
+                {
+                    opcode: 'getCompass',
+                    text: `Compass${device}`,
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        DEVICE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'A',
+                            menu: 'deviceIDs'
                         }
                     }
                 }
@@ -545,8 +731,10 @@ class Scratch3FinchBlocks {
                 twoPorts: this.TWO_PORTS_MENU,
                 hummingbirdSensors: this.HUMMINGBIRD_SENSORS_MENU,
                 microbitAxisSensors: this.MICROBIT_AXIS_SENSORS_MENU,
+                microbitButtons: this.MICROBIT_BUTTONS_MENU,
                 microbitAccelerometerStates: this.MICROBIT_ACCELEROMETER_STATES_MENU,
-                axes: this.AXES_MENU
+                axes: this.AXES_MENU,
+                deviceIDs: this.DEVICE_IDS_MENU
             }
         };
     }

@@ -176,6 +176,22 @@ class Scratch3FinchBlocks {
     }
 
     /**
+     * @param {object} args args passed in by the scratch block
+     * @param {number} args.PORT Which LED port to set
+     * @param {string} args.COLOR The color to set to as a number in 0xRRGGBB format
+     */
+    setTriLEDPicker (args) {
+        const color = parseInt(args.COLOR.substr(1), 16);
+
+        this.setTriLED({
+            PORT: args.PORT,
+            RED: (color >> 16) & 0xFF,
+            GREEN: (color >> 8) & 0xFF,
+            BLUE: (color >> 0) & 0xFF
+        });
+    }
+
+    /**
      * Construct a set of Finch blocks.
      */
     constructor () {
@@ -254,11 +270,26 @@ class Scratch3FinchBlocks {
                         },
                         GREEN: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 100
+                            defaultValue: 0
                         },
                         BLUE: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setTriLEDPicker',
+                    text: `TriLED [PORT] [COLOR]`,
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PORT: {
+                            type: ArgumentType.NUMBER,
+                            menu: 'twoPorts',
+                            defaultValue: 1
+                        },
+                        COLOR: {
+                            type: ArgumentType.COLOR
                         }
                     }
                 },
