@@ -1,5 +1,5 @@
 {
-  "English": {
+  "en": {
     "block_Tri_LED": "Tri-LED (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Port",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -22,10 +22,9 @@
     "Logo_Up": "Logo Up",
     "Logo_Down": "Logo Down",
     "Shake": "Shake",
-    "block_Compass": "Compass",
-    "": ""
+    "block_Compass": "Compass"
   },
-  "German Translation": {
+  "de": {
     "block_Tri_LED": "Dreifarben-LED (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Anschluss",
     "block_LED": "LED (Slot 1) (Slot2) %",
@@ -48,10 +47,9 @@
     "Logo_Up": "Logo Oben",
     "Logo_Down": "Logo Unten",
     "Shake": "Schütteln",
-    "block_Compass": "Kompass",
-    "": ""
+    "block_Compass": "Kompass"
   },
-  "Portuguese Translation": {
+  "pt": {
     "block_Tri_LED": "LED Tricolor (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Porta",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -74,10 +72,9 @@
     "Logo_Up": "Logo para cima",
     "Logo_Down": "Logo para baixo",
     "Shake": "Agitar",
-    "block_Compass": "Bússola",
-    "": ""
+    "block_Compass": "Bússola"
   },
-  "French Translation": {
+  "fr": {
     "block_Tri_LED": "Tri-LED (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Connecteur",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -100,10 +97,9 @@
     "Logo_Up": "Logo vers le haut",
     "Logo_Down": "Logo vers le bas",
     "Shake": "Secouer",
-    "block_Compass": "Compas",
-    "": ""
+    "block_Compass": "Compas"
   },
-  "Dutch Translation": {
+  "nl": {
     "block_Tri_LED": "Tri-LED (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Poort",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -126,10 +122,9 @@
     "Logo_Up": "Logo Omhoog",
     "Logo_Down": "Logo Omlaag",
     "Shake": "Schudden",
-    "block_Compass": "Kompas",
-    "": ""
+    "block_Compass": "Kompas"
   },
-  "Simplified Chinese Translation": {
+  "zh-cn": {
     "block_Tri_LED": "三色LED (Slot 1) 红 (Slot 2) % 绿 (Slot 3) % 蓝 (Slot 4) %",
     "port": "端",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -152,10 +147,9 @@
     "Logo_Up": "下则偏低",
     "Logo_Down": "上则偏低",
     "Shake": "晃动",
-    "block_Compass": "指南针",
-    "": ""
+    "block_Compass": "指南针"
   },
-  "Traditional Chinese Translation": {
+  "zh-tw": {
     "block_Tri_LED": "三色LED (Slot 1) 紅 (Slot 2) % 綠 (Slot 3) % 藍 (Slot 4) %",
     "port": "端",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -178,10 +172,9 @@
     "Logo_Up": "下則偏低",
     "Logo_Down": "上則偏低",
     "Shake": "晃動",
-    "block_Compass": "指南針",
-    "": ""
+    "block_Compass": "指南針"
   },
-  "Arabic Translation": {
+  "ar": {
     "block_Tri_LED": "ضوء الصمام الثلاثي فتحة 1 فتحة 2",
     "port": "",
     "block_LED": "ضوء فتحة 1 فتحة 2",
@@ -204,10 +197,9 @@
     "Logo_Up": "الشعار لأعلى",
     "Logo_Down": "الشعار إلى الأسفل",
     "Shake": "هزه",
-    "block_Compass": "بوصلة",
-    "": ""
+    "block_Compass": "بوصلة"
   },
-  "Danish Translation": {
+  "da": {
     "block_Tri_LED": "Tri-LED (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Indgang",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -230,10 +222,9 @@
     "Logo_Up": "Logo op",
     "Logo_Down": "Logo ned",
     "Shake": "Ryst",
-    "block_Compass": "Kompas",
-    "": ""
+    "block_Compass": "Kompas"
   },
-  "Korean Translation": {
+  "ko": {
     "block_Tri_LED": "삼색 LED (Slot 1) 빨강 (Slot 2) % 초록 (Slot 3) % 파랑 (Slot 4) %",
     "port": "포트",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -256,10 +247,9 @@
     "Logo_Up": "오른쪽 기울임",
     "Logo_Down": "로고 하늘 방향",
     "Shake": "로고 땅 방향",
-    "block_Compass": "흔들림",
-    "": "나침반 센서"
+    "block_Compass": "흔들림"
   },
-  "Catalan Translation": {
+  "ca": {
     "block_Tri_LED": "Tri-LED (Slot 1) vermell (Slot 2) % verd (Slot 3) % blau (Slot 4) %",
     "port": "Port",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -282,10 +272,9 @@
     "Logo_Up": "Logo cap per amunt",
     "Logo_Down": "Logo cap per avall",
     "Shake": "Sacsejada",
-    "block_Compass": "Brúixola",
-    "": ""
+    "block_Compass": "Brúixola"
   },
-  "Spanish Translation": {
+  "es": {
     "block_Tri_LED": "Led tricolor (Slot 1) R (Slot 2) % G (Slot 3) % B (Slot 4) %",
     "port": "Puerto",
     "block_LED": "LED (Slot 1) (Slot 2) %",
@@ -308,10 +297,9 @@
     "Logo_Up": "Logo arriba",
     "Logo_Down": "Logo abajo",
     "Shake": "Sacudir",
-    "block_Compass": "Brujula",
-    "": ""
+    "block_Compass": "Brujula"
   },
-  "Hebrew Translation": {
+  "he": {
     "block_Tri_LED": "לד שלושה צבעים       %  R      %  G   %   B",
     "port": "יציאה",
     "block_LED": "לד   %",
@@ -334,7 +322,6 @@
     "Logo_Up": "לוגו למעלה",
     "Logo_Down": "לוגו למטה",
     "Shake": "לנער",
-    "block_Compass": "מצפן",
-    "": ""
+    "block_Compass": "מצפן"
   }
 }
