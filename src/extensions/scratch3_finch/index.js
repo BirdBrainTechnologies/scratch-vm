@@ -37,12 +37,13 @@ const rejectDisconnected = function (value) {
 
 const getSensor = function (urlComponent) {
     let cache = null;
-    return () => {
+    return quiet => {
         if (cache !== null) {
             return cache;
         }
-        return fetch(`${serverURL}${urlComponent}`).then(rejectDisconnected)
-            .catch(serverConnectionError)
+        let promise = fetch(`${serverURL}${urlComponent}`).then(rejectDisconnected);
+        if (!quiet) promise = promise.catch(serverConnectionError);
+        return promise
             .then(JSON.parse)
             .then(value => {
                 cache = value;
@@ -156,9 +157,12 @@ class Scratch3FinchBlocks {
     setOutput (argParsing, urlFunction) {
         let waitingValue = null;
         let inTransit = null;
-        const sendMessage = value => {
-            fetch(urlFunction(value)).then(rejectDisconnected)
-                .catch(serverConnectionError)
+        const sendMessage = (value, quiet) => {
+            let promise = fetch(urlFunction(value)).then(rejectDisconnected);
+            if (!quiet) {
+                promise = promise.catch(serverConnectionError);
+            }
+            promise
                 .catch(error => Promise.resolve(error))
                 .then(() => {
                     // This will run regardless of whether the request succeeded or not.
@@ -169,11 +173,11 @@ class Scratch3FinchBlocks {
                     }
                 });
         };
-        return args => {
+        return (args, quiet) => {
             const value = argParsing(args);
             if (inTransit === null) {
                 inTransit = value;
-                sendMessage(value);
+                sendMessage(value, quiet);
             } else if (inTransit !== value) {
                 waitingValue = value;
             } else if (waitingValue !== null) {
@@ -183,8 +187,8 @@ class Scratch3FinchBlocks {
     }
 
     stop () {
-        this.stopFinch();
-        this.setLED({RED: 0, GREEN: 0, BLUE: 0});
+        this.stopFinch(true);
+        this.setLED({RED: 0, GREEN: 0, BLUE: 0}, true);
     }
 
     fSpeak (args) {
@@ -193,8 +197,11 @@ class Scratch3FinchBlocks {
         fetch(`${serverURL}/speak/${encodeURIComponent(phrase)}`);
     }
 
-    stopFinch () {
-        return this.setFinchMotor({LEFT: 0, RIGHT: 0});
+    /**
+     * @param {boolean=} quiet Don't alert if a Finch is not connected
+     */
+    stopFinch (quiet) {
+        this.setFinchMotor({LEFT: 0, RIGHT: 0}, quiet);
     }
 
     /**
@@ -220,8 +227,8 @@ class Scratch3FinchBlocks {
 
         const accelerationPromises = [
             Promise.resolve(this.getXAcceleration()),
-            Promise.resolve(this.getYAcceleration()),
-            Promise.resolve(this.getZAcceleration())
+            Promise.resolve(this.getYAcceleration(true)),
+            Promise.resolve(this.getZAcceleration(true))
         ];
 
         const self = this;
